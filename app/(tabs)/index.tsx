@@ -91,8 +91,7 @@ export default function HomeScreen() {
 
   const handleEventPress = (event: Event) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    console.log('Event pressed:', event.name);
-    // TODO: Navigate to event details
+    router.push(`/event/${event.id}`);
   };
 
   const handleScout = (event: Event) => {

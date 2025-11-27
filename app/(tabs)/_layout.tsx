@@ -1,5 +1,9 @@
 import { Tabs } from 'expo-router';
 import { Home, Map, Ticket, Grid3x3, User } from 'lucide-react-native';
+import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import * as Haptics from 'expo-haptics';
+import { Colors, Spacing, Typography, Shadows } from '@/constants';
 
 export default function TabLayout() {
   return (
@@ -7,25 +11,32 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1A1A1A',
-          borderTopWidth: 0,
+          backgroundColor: Colors.ui.background.secondary,
+          borderTopWidth: 1,
+          borderTopColor: Colors.ui.border.subtle,
           height: 85,
           paddingBottom: 25,
           paddingTop: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 20,
+          ...Shadows.elevation.lg,
         },
-        tabBarActiveTintColor: '#FF3B30',
-        tabBarInactiveTintColor: '#666666',
+        tabBarActiveTintColor: Colors.primary[400],
+        tabBarInactiveTintColor: Colors.ui.text.tertiary,
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          ...Typography.Caption.small,
+          fontWeight: '700',
           marginTop: 4,
-          letterSpacing: 0.3,
+          letterSpacing: 0.5,
         },
+        tabBarButton: (props) => (
+          <TouchableOpacity
+            {...props}
+            activeOpacity={0.7}
+            onPress={(e) => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              props.onPress?.(e);
+            }}
+          />
+        ),
       }}>
       <Tabs.Screen
         name="index"
