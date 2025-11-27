@@ -1,15 +1,23 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import { MapPinOff } from 'lucide-react-native';
+import { Colors } from '@/constants';
+import { EmptyState } from '@/components';
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen options={{ title: 'Oops!' }} />
       <View style={styles.container}>
-        <Text style={styles.text}>This screen doesn't exist.</Text>
-        <Link href="/" style={styles.link}>
-          <Text>Go to home screen!</Text>
-        </Link>
+        <EmptyState
+          icon={<MapPinOff size={64} color={Colors.ui.text.tertiary} strokeWidth={1.5} />}
+          title="Page Not Found"
+          description="This screen doesn't exist. Let's get you back on track."
+          actionLabel="Go to Home"
+          onAction={() => router.replace('/(tabs)')}
+        />
       </View>
     </>
   );
@@ -18,16 +26,6 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 600,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
+    backgroundColor: Colors.ui.background.primary,
   },
 });

@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Flame, Users, MapPin } from 'lucide-react-native';
+import { Flame, Users } from 'lucide-react-native';
+import { Colors, Spacing, Typography, Shadows, Layout } from '@/constants';
+import { Button } from '@/components';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -29,21 +31,21 @@ const slides: OnboardingSlide[] = [
     title: 'Every event.\nEvery vibe.\nOne app.',
     subtitle: 'Discover the hottest events happening in Nairobi and beyond',
     icon: Flame,
-    gradient: ['#FF3B30', '#FF6B6B'],
+    gradient: Colors.gradients.primary,
   },
   {
     id: '2',
     title: 'Be first to know.\nScout events.\nEarn rewards.',
     subtitle: 'Predict trending events, build your rep, and unlock exclusive perks',
     icon: Flame,
-    gradient: ['#FF6B6B', '#FFB347'],
+    gradient: Colors.gradients.secondary,
   },
   {
     id: '3',
     title: 'Your crew.\nYour turf.\nYour city.',
     subtitle: 'Compete with your squad, claim territories, and own the nightlife',
     icon: Users,
-    gradient: ['#FFB347', '#FF3B30'],
+    gradient: Colors.gradients.warmGlow,
   },
 ];
 
@@ -80,7 +82,7 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
-  const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => {
+  const renderSlide = ({ item }: { item: OnboardingSlide }) => {
     const Icon = item.icon;
 
     return (
@@ -92,7 +94,7 @@ export default function OnboardingScreen() {
           end={{ x: 1, y: 1 }}>
           <View style={styles.iconContainer}>
             <View style={styles.iconCircle}>
-              <Icon size={80} color="#FFFFFF" strokeWidth={2} />
+              <Icon size={80} color={Colors.ui.text.primary} strokeWidth={2} />
             </View>
           </View>
 
@@ -107,10 +109,12 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Skip Button */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
+      {/* Slides */}
       <FlatList
         ref={flatListRef}
         data={slides}
@@ -127,7 +131,9 @@ export default function OnboardingScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
       />
 
+      {/* Footer */}
       <View style={styles.footer}>
+        {/* Pagination Dots */}
         <View style={styles.pagination}>
           {slides.map((_, index) => {
             const inputRange = [
@@ -163,17 +169,15 @@ export default function OnboardingScreen() {
           })}
         </View>
 
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <LinearGradient
-            colors={['#FF3B30', '#FF6B6B']}
-            style={styles.nextButtonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}>
-            <Text style={styles.nextButtonText}>
-              {currentIndex === slides.length - 1 ? "Let's Go" : 'Next'}
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* Next/Let's Go Button */}
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          onPress={handleNext}
+          style={styles.nextButton}>
+          {currentIndex === slides.length - 1 ? "Let's Go" : 'Next'}
+        </Button>
       </View>
     </View>
   );
@@ -182,21 +186,20 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: Colors.ui.background.primary,
   },
   skipButton: {
     position: 'absolute',
     top: 60,
-    right: 24,
+    right: Spacing[6],
     zIndex: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[2],
   },
   skipText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    opacity: 0.7,
+    ...Typography.Label.medium,
+    color: Colors.ui.text.primary,
+    opacity: Colors.opacity[70],
   },
   slide: {
     width: SCREEN_WIDTH,
@@ -204,7 +207,7 @@ const styles = StyleSheet.create({
   },
   slideGradient: {
     flex: 1,
-    paddingHorizontal: 40,
+    paddingHorizontal: Spacing[10],
     paddingTop: 120,
     paddingBottom: 180,
   },
@@ -220,70 +223,44 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    ...Shadows.xl,
   },
   textContainer: {
     flex: 0.8,
     justifyContent: 'flex-start',
-    paddingTop: 40,
+    paddingTop: Spacing[10],
   },
   title: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    ...Typography.Display.small,
     lineHeight: 50,
-    marginBottom: 20,
-    letterSpacing: -1,
+    marginBottom: Spacing[5],
   },
   subtitle: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    opacity: 0.9,
+    ...Typography.Body.large,
+    color: Colors.ui.text.primary,
+    opacity: Colors.opacity[90],
     lineHeight: 26,
-    letterSpacing: 0.2,
   },
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 40,
+    paddingHorizontal: Spacing[10],
     paddingBottom: 60,
     alignItems: 'center',
   },
   pagination: {
     flexDirection: 'row',
-    marginBottom: 40,
-    gap: 8,
+    marginBottom: Spacing[10],
+    gap: Spacing[2],
   },
   dot: {
     height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    borderRadius: Layout.radius.sm,
+    backgroundColor: Colors.ui.text.primary,
   },
   nextButton: {
     width: '100%',
-    borderRadius: 30,
-    overflow: 'hidden',
-    shadowColor: '#FF3B30',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  nextButtonGradient: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  nextButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
   },
 });
