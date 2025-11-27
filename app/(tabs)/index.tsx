@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, Flame } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { Colors, Spacing, Typography } from '@/constants';
-import { EventCard, SearchBar, FilterChips, Avatar, Badge, Event, FilterOption } from '@/components';
+import { EventCard, SearchBar, FilterChips, Avatar, Badge, Event, FilterOption, SkeletonCard } from '@/components';
 
 const MOCK_EVENTS: Event[] = [
   {
@@ -57,24 +58,57 @@ const FILTER_OPTIONS: FilterOption[] = [
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>(['tonight']);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial data fetch
+    const loadInitialData = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setLoading(false);
+    };
+    loadInitialData();
+  }, []);
 
   const handleFilterSelect = (filterId: string) => {
     setSelectedFilters([filterId]);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // TODO: Fetch fresh event data
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setRefreshing(false);
+  };
+
   const handleEventPress = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Event pressed:', event.name);
     // TODO: Navigate to event details
   };
 
   const handleScout = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     console.log('Scout event:', event.name);
     // TODO: Implement scout functionality
   };
 
   const handleGetTickets = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Get tickets:', event.name);
     // TODO: Navigate to ticket purchase
+  };
+
+  const handleNotificationPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log('Notifications pressed');
+    // TODO: Navigate to notifications
   };
 
   return (
@@ -95,7 +129,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Notification Button */}
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress} activeOpacity={0.7}>
             <Bell size={24} color={Colors.ui.text.primary} strokeWidth={2} />
             <View style={styles.notificationDot} />
           </TouchableOpacity>
@@ -123,36 +157,78 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}>
-        {/* Trending Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending Now 🔥</Text>
-          {MOCK_EVENTS.filter((e) => e.trending).map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant="default"
-              onPress={handleEventPress}
-              onScout={handleScout}
-              onGetTickets={handleGetTickets}
-            />
-          ))}
-        </View>
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={Colors.primary[400]}
+            colors={[Colors.primary[400]]}
+            progressBackgroundColor={Colors.ui.background.secondary}
+          />
+        }>
+        {loading ? (
+          <>
+            {/* Loading Skeletons */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Featured Events ✨</Text>
+              <View style={styles.skeletonContainer}>
+                <SkeletonCard height={420} style={styles.skeletonCard} />
+                <SkeletonCard height={420} style={styles.skeletonCard} />
+              </View>
+            </View>
 
-        {/* Your Vibes Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Vibes</Text>
-          {MOCK_EVENTS.filter((e) => !e.trending).map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant="default"
-              onPress={handleEventPress}
-              onScout={handleScout}
-              onGetTickets={handleGetTickets}
-            />
-          ))}
-        </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Your Vibes</Text>
+              <View style={styles.skeletonContainer}>
+                <SkeletonCard height={380} style={styles.skeletonCard} />
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Featured Events Carousel */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Featured Events ✨</Text>
+              <FlatList
+                horizontal
+                data={MOCK_EVENTS.filter((e) => e.trending)}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.carouselItem}>
+                    <EventCard
+                      event={item}
+                      variant="featured"
+                      onPress={handleEventPress}
+                      onScout={handleScout}
+                      onGetTickets={handleGetTickets}
+                    />
+                  </View>
+                )}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carouselContent}
+                snapToInterval={340}
+                decelerationRate="fast"
+                onScrollBeginDrag={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              />
+            </View>
+
+            {/* All Events Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>All Events</Text>
+              {MOCK_EVENTS.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  variant="compact"
+                  onPress={handleEventPress}
+                  onScout={handleScout}
+                  onGetTickets={handleGetTickets}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -223,5 +299,19 @@ const styles = StyleSheet.create({
     ...Typography.Heading.h3,
     marginBottom: Spacing[5],
     paddingHorizontal: Spacing[5],
+  },
+  skeletonContainer: {
+    gap: Spacing[4],
+    paddingHorizontal: Spacing[5],
+  },
+  skeletonCard: {
+    marginBottom: Spacing[4],
+  },
+  carouselContent: {
+    paddingHorizontal: Spacing[5],
+    gap: Spacing[4],
+  },
+  carouselItem: {
+    width: 320,
   },
 });
