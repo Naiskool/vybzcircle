@@ -1,10 +1,13 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Flame, Calendar, Award, Users, Settings, LogOut } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { Colors, Spacing, Typography } from '@/constants';
 import { Avatar, Badge, Card, UserStats, Stat } from '@/components';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const stats: Stat[] = [
     {
       id: 'events',
@@ -25,6 +28,31 @@ export default function ProfileScreen() {
       icon: <Award size={24} color={Colors.primary[400]} strokeWidth={2} />,
     },
   ];
+
+  const handleSettingsPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/settings');
+  };
+
+  const handleSignOut = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+        onPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+      },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          console.log('Signed out');
+          // TODO: Implement sign out logic
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -71,14 +99,20 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Settings</Text>
 
           <Card variant="elevated" padding="none">
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleSettingsPress}
+              activeOpacity={0.7}>
               <Settings size={22} color={Colors.ui.text.primary} strokeWidth={2} />
               <Text style={styles.menuText}>Account Settings</Text>
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleSignOut}
+              activeOpacity={0.7}>
               <LogOut size={22} color={Colors.primary[400]} strokeWidth={2} />
               <Text style={[styles.menuText, styles.menuTextDanger]}>Sign Out</Text>
             </TouchableOpacity>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Bell, Flame } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Colors, Spacing, Typography } from '@/constants';
@@ -56,6 +57,7 @@ const FILTER_OPTIONS: FilterOption[] = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>(['tonight']);
   const [refreshing, setRefreshing] = useState(false);
@@ -107,8 +109,7 @@ export default function HomeScreen() {
 
   const handleNotificationPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log('Notifications pressed');
-    // TODO: Navigate to notifications
+    router.push('/notifications');
   };
 
   return (
