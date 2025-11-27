@@ -1,18 +1,13 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Bell, Flame, MapPin, Calendar, DollarSign, Users } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Bell, Flame } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { Colors, Spacing, Typography } from '@/constants';
+import { EventCard, SearchBar, FilterChips, Avatar, Badge, Event, FilterOption, SkeletonCard } from '@/components';
 
-const MOCK_EVENTS = [
+const MOCK_EVENTS: Event[] = [
   {
     id: '1',
     name: 'Amapiano Sundays',
@@ -54,215 +49,226 @@ const MOCK_EVENTS = [
   },
 ];
 
-export default function HomeScreen() {
-  const [selectedFilter, setSelectedFilter] = useState('Tonight');
+const FILTER_OPTIONS: FilterOption[] = [
+  { id: 'tonight', label: 'Tonight' },
+  { id: 'weekend', label: 'This Weekend' },
+  { id: 'free', label: 'Free Entry' },
+  { id: 'nearby', label: 'Near Me' },
+];
 
-  const filters = ['Tonight', 'This Weekend', 'Free Entry', 'Near Me'];
+export default function HomeScreen() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['tonight']);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial data fetch
+    const loadInitialData = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setLoading(false);
+    };
+    loadInitialData();
+  }, []);
+
+  const handleFilterSelect = (filterId: string) => {
+    setSelectedFilters([filterId]);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // TODO: Fetch fresh event data
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setRefreshing(false);
+  };
+
+  const handleEventPress = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(`/event/${event.id}`);
+  };
+
+  const handleScout = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    console.log('Scout event:', event.name);
+    // TODO: Implement scout functionality
+  };
+
+  const handleGetTickets = (event: Event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('Get tickets:', event.name);
+    // TODO: Navigate to ticket purchase
+  };
+
+  const handleNotificationPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/notifications');
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
       <View style={styles.header}>
+        {/* User Info */}
         <View style={styles.headerTop}>
           <View style={styles.userInfo}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>J</Text>
-            </View>
-            <View>
+            <Avatar name="James Kamau" fallback="J" size="lg" />
+            <View style={styles.userDetails}>
               <Text style={styles.greeting}>Hey James!</Text>
-              <View style={styles.levelBadge}>
-                <Flame size={12} color="#FF3B30" />
-                <Text style={styles.levelText}>Level 6 Scout</Text>
-              </View>
+              <Badge variant="primary" size="sm">
+                <Flame size={10} color={Colors.primary[400]} strokeWidth={2} />
+                {'  '}Level 6 Scout
+              </Badge>
             </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Bell size={24} color="#FFFFFF" strokeWidth={2} />
-              <View style={styles.notificationDot} />
-            </TouchableOpacity>
-          </View>
+
+          {/* Notification Button */}
+          <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress} activeOpacity={0.7}>
+            <Bell size={24} color={Colors.ui.text.primary} strokeWidth={2} />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search events, venues, or vibes..."
-            placeholderTextColor="#666666"
-          />
-        </View>
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onClear={() => setSearchQuery('')}
+          placeholder="Search events, venues, or vibes..."
+        />
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filtersContainer}
-          contentContainerStyle={styles.filtersContent}>
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              onPress={() => setSelectedFilter(filter)}
-              style={[
-                styles.filterChip,
-                selectedFilter === filter && styles.filterChipActive,
-              ]}>
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filter && styles.filterTextActive,
-                ]}>
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {/* Filter Chips */}
+        <FilterChips
+          options={FILTER_OPTIONS}
+          selected={selectedFilters}
+          onSelect={handleFilterSelect}
+          multiSelect={false}
+          style={styles.filters}
+        />
       </View>
 
+      {/* Events List */}
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending Now 🔥</Text>
-          {MOCK_EVENTS.filter((e) => e.trending).map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </View>
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={Colors.primary[400]}
+            colors={[Colors.primary[400]]}
+            progressBackgroundColor={Colors.ui.background.secondary}
+          />
+        }>
+        {loading ? (
+          <>
+            {/* Loading Skeletons */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Featured Events ✨</Text>
+              <View style={styles.skeletonContainer}>
+                <SkeletonCard height={420} style={styles.skeletonCard} />
+                <SkeletonCard height={420} style={styles.skeletonCard} />
+              </View>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Vibes</Text>
-          {MOCK_EVENTS.filter((e) => !e.trending).map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Your Vibes</Text>
+              <View style={styles.skeletonContainer}>
+                <SkeletonCard height={380} style={styles.skeletonCard} />
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            {/* Featured Events Carousel */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Featured Events ✨</Text>
+              <FlatList
+                horizontal
+                data={MOCK_EVENTS.filter((e) => e.trending)}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.carouselItem}>
+                    <EventCard
+                      event={item}
+                      variant="featured"
+                      onPress={handleEventPress}
+                      onScout={handleScout}
+                      onGetTickets={handleGetTickets}
+                    />
+                  </View>
+                )}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carouselContent}
+                snapToInterval={340}
+                decelerationRate="fast"
+                onScrollBeginDrag={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              />
+            </View>
+
+            {/* All Events Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>All Events</Text>
+              {MOCK_EVENTS.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  variant="compact"
+                  onPress={handleEventPress}
+                  onScout={handleScout}
+                  onGetTickets={handleGetTickets}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function EventCard({ event }: { event: typeof MOCK_EVENTS[0] }) {
-  return (
-    <TouchableOpacity style={styles.eventCard} activeOpacity={0.9}>
-      <Image source={{ uri: event.image }} style={styles.eventImage} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.9)']}
-        style={styles.eventGradient}
-      />
-
-      {event.trending && (
-        <View style={styles.trendingBadge}>
-          <Flame size={14} color="#FFFFFF" />
-          <Text style={styles.trendingText}>{event.interested} interested</Text>
-        </View>
-      )}
-
-      <View style={styles.eventContent}>
-        <Text style={styles.eventName}>{event.name}</Text>
-
-        <View style={styles.eventMeta}>
-          <View style={styles.metaRow}>
-            <MapPin size={14} color="#FF3B30" />
-            <Text style={styles.metaText}>
-              {event.venue} · {event.distance}
-            </Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Calendar size={14} color="#FF3B30" />
-            <Text style={styles.metaText}>
-              {event.date} · {event.time}
-            </Text>
-          </View>
-          <View style={styles.metaRow}>
-            <DollarSign size={14} color="#FF3B30" />
-            <Text style={styles.metaText}>KES {event.price}</Text>
-          </View>
-        </View>
-
-        {event.friends > 0 && (
-          <View style={styles.friendsRow}>
-            <View style={styles.friendsAvatars}>
-              <View style={styles.friendAvatar} />
-              <View style={[styles.friendAvatar, { marginLeft: -8 }]} />
-              <View style={[styles.friendAvatar, { marginLeft: -8 }]} />
-            </View>
-            <Text style={styles.friendsText}>{event.friends} friends going</Text>
-          </View>
-        )}
-
-        <View style={styles.eventActions}>
-          <TouchableOpacity style={styles.scoutButton}>
-            <Flame size={18} color="#FF3B30" />
-            <Text style={styles.scoutButtonText}>Scout</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ticketsButton}>
-            <Text style={styles.ticketsButtonText}>Get Tickets</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: Colors.ui.background.primary,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingHorizontal: Spacing[5],
+    paddingTop: Spacing[2],
+    paddingBottom: Spacing[5],
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
+    borderBottomColor: Colors.ui.border.subtle,
+    gap: Spacing[4],
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing[3],
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FF3B30',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  userDetails: {
+    gap: Spacing[1],
   },
   greeting: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  levelText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#999999',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 16,
+    ...Typography.Label.large,
+    color: Colors.ui.text.primary,
   },
   iconButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: Colors.ui.background.secondary,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -274,199 +280,38 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF3B30',
+    backgroundColor: Colors.primary[400],
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 12,
-    marginBottom: 16,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  filtersContainer: {
-    marginHorizontal: -20,
-  },
-  filtersContent: {
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-  filterChip: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#1A1A1A',
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
-  filterChipActive: {
-    backgroundColor: '#FF3B30',
-    borderColor: '#FF3B30',
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999999',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
+  filters: {
+    marginHorizontal: -Spacing[5],
   },
   content: {
     flex: 1,
   },
   contentContainer: {
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingTop: Spacing[6],
+    paddingBottom: Spacing[10],
   },
   section: {
-    marginBottom: 32,
+    marginBottom: Spacing[8],
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    letterSpacing: -0.5,
+    ...Typography.Heading.h3,
+    marginBottom: Spacing[5],
+    paddingHorizontal: Spacing[5],
   },
-  eventCard: {
-    marginBottom: 24,
-    marginHorizontal: 20,
-    borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: '#1A1A1A',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
+  skeletonContainer: {
+    gap: Spacing[4],
+    paddingHorizontal: Spacing[5],
   },
-  eventImage: {
-    width: '100%',
-    height: 240,
+  skeletonCard: {
+    marginBottom: Spacing[4],
   },
-  eventGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 240,
+  carouselContent: {
+    paddingHorizontal: Spacing[5],
+    gap: Spacing[4],
   },
-  trendingBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 59, 48, 0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#FF3B30',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-  },
-  trendingText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  eventContent: {
-    padding: 20,
-  },
-  eventName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 12,
-    letterSpacing: -0.5,
-  },
-  eventMeta: {
-    gap: 8,
-    marginBottom: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metaText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#CCCCCC',
-  },
-  friendsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#2A2A2A',
-  },
-  friendsAvatars: {
-    flexDirection: 'row',
-  },
-  friendAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FF3B30',
-    borderWidth: 2,
-    borderColor: '#1A1A1A',
-  },
-  friendsText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#999999',
-  },
-  eventActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  scoutButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
-    borderWidth: 1,
-    borderColor: '#FF3B30',
-  },
-  scoutButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FF3B30',
-  },
-  ticketsButton: {
-    flex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    backgroundColor: '#FF3B30',
-    shadowColor: '#FF3B30',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  ticketsButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  carouselItem: {
+    width: 320,
   },
 });

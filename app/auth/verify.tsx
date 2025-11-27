@@ -3,17 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShieldCheck } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { Colors, Spacing, Typography } from '@/constants';
+import { Button } from '@/components';
 
 export default function VerifyScreen() {
   const router = useRouter();
@@ -93,9 +93,17 @@ export default function VerifyScreen() {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.resendButton}>
-          <Text style={styles.resendText}>Didn't receive code? Resend</Text>
-        </TouchableOpacity>
+        <Button
+          variant="ghost"
+          size="lg"
+          fullWidth
+          disabled={loading}
+          onPress={() => {
+            // TODO: Implement resend OTP
+            Alert.alert('Resend OTP', 'Code resent successfully');
+          }}>
+          Didn't receive code? Resend
+        </Button>
 
         {loading && (
           <View style={styles.loadingContainer}>
@@ -110,80 +118,64 @@ export default function VerifyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: Colors.ui.background.primary,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing[8],
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: Spacing[12],
   },
   iconCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    backgroundColor: Colors.semantic.errorBg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing[6],
     borderWidth: 2,
-    borderColor: '#FF3B30',
+    borderColor: Colors.primary[400],
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 12,
-    letterSpacing: -1,
+    ...Typography.Heading.h2,
+    marginBottom: Spacing[3],
   },
   subtitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#666666',
+    ...Typography.Body.base,
+    color: Colors.ui.text.tertiary,
     textAlign: 'center',
-    lineHeight: 24,
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
-    marginBottom: 32,
+    gap: Spacing[3],
+    marginBottom: Spacing[8],
   },
   otpInput: {
     width: 50,
     height: 60,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
+    backgroundColor: Colors.ui.background.secondary,
+    borderRadius: Spacing[3],
     borderWidth: 2,
-    borderColor: '#2A2A2A',
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    borderColor: Colors.ui.border.default,
+    ...Typography.Heading.h3,
+    color: Colors.ui.text.primary,
     textAlign: 'center',
   },
   otpInputFilled: {
-    borderColor: '#FF3B30',
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-  },
-  resendButton: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  resendText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FF3B30',
+    borderColor: Colors.primary[400],
+    backgroundColor: Colors.semantic.errorBg,
   },
   loadingContainer: {
-    marginTop: 24,
+    marginTop: Spacing[6],
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#999999',
+    ...Typography.Body.base,
+    color: Colors.ui.text.tertiary,
   },
 });
