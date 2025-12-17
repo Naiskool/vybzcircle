@@ -7,13 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShieldCheck } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors, Spacing, Typography } from '@/constants';
-import { Button } from '@/components';
 
 export default function VerifyScreen() {
   const router = useRouter();
@@ -81,7 +81,9 @@ export default function VerifyScreen() {
           {otp.map((digit, index) => (
             <TextInput
               key={index}
-              ref={(ref) => (inputRefs.current[index] = ref)}
+              ref={(ref) => {
+                inputRefs.current[index] = ref;
+              }}
               style={[styles.otpInput, digit && styles.otpInputFilled]}
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
@@ -93,17 +95,9 @@ export default function VerifyScreen() {
           ))}
         </View>
 
-        <Button
-          variant="ghost"
-          size="lg"
-          fullWidth
-          disabled={loading}
-          onPress={() => {
-            // TODO: Implement resend OTP
-            Alert.alert('Resend OTP', 'Code resent successfully');
-          }}>
-          Didn't receive code? Resend
-        </Button>
+        <TouchableOpacity style={styles.resendButton}>
+          <Text style={styles.resendText}>Didn't receive code? Resend</Text>
+        </TouchableOpacity>
 
         {loading && (
           <View style={styles.loadingContainer}>
@@ -118,64 +112,80 @@ export default function VerifyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.ui.background.primary,
+    backgroundColor: '#0A0A0A',
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing[8],
+    paddingHorizontal: 32,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing[12],
+    marginBottom: 48,
   },
   iconCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.semantic.errorBg,
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing[6],
+    marginBottom: 24,
     borderWidth: 2,
-    borderColor: Colors.primary[400],
+    borderColor: '#FF3B30',
   },
   title: {
-    ...Typography.Heading.h2,
-    marginBottom: Spacing[3],
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    letterSpacing: -1,
   },
   subtitle: {
-    ...Typography.Body.base,
-    color: Colors.ui.text.tertiary,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666666',
     textAlign: 'center',
+    lineHeight: 24,
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Spacing[3],
-    marginBottom: Spacing[8],
+    gap: 12,
+    marginBottom: 32,
   },
   otpInput: {
     width: 50,
     height: 60,
-    backgroundColor: Colors.ui.background.secondary,
-    borderRadius: Spacing[3],
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.ui.border.default,
-    ...Typography.Heading.h3,
-    color: Colors.ui.text.primary,
+    borderColor: '#2A2A2A',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   otpInputFilled: {
-    borderColor: Colors.primary[400],
-    backgroundColor: Colors.semantic.errorBg,
+    borderColor: '#FF3B30',
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+  },
+  resendButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  resendText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FF3B30',
   },
   loadingContainer: {
-    marginTop: Spacing[6],
+    marginTop: 24,
     alignItems: 'center',
   },
   loadingText: {
-    ...Typography.Body.base,
-    color: Colors.ui.text.tertiary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#999999',
   },
 });

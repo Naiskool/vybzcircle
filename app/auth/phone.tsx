@@ -6,40 +6,38 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Phone } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { Colors, Spacing, Typography } from '@/constants';
-import { Input, Button } from '@/components';
 
 export default function PhoneAuthScreen() {
   const router = useRouter();
   const { signInWithPhone } = useAuth();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleContinue = async () => {
-    if (!phone || phone.length < 9) {
-      setError('Please enter a valid phone number');
+    if (!phone || phone.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number');
       return;
     }
 
     const formattedPhone = phone.startsWith('+254') ? phone : `+254${phone.replace(/^0/, '')}`;
 
     setLoading(true);
-    setError('');
     try {
       await signInWithPhone(formattedPhone);
       router.push({
         pathname: '/auth/verify',
         params: { phone: formattedPhone },
       });
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP');
-      Alert.alert('Error', err.message || 'Failed to send OTP');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -50,44 +48,45 @@ export default function PhoneAuthScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <Phone size={40} color={Colors.primary[400]} strokeWidth={2} />
+            <Phone size={40} color="#FF3B30" strokeWidth={2} />
           </View>
           <Text style={styles.title}>Enter Your Number</Text>
           <Text style={styles.subtitle}>We'll send you a verification code</Text>
         </View>
 
-        {/* Form */}
         <View style={styles.form}>
-          <Input
-            label="Phone Number"
-            placeholder="712 345 678"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-            error={!!error}
-            errorText={error}
-            maxLength={12}
-            autoFocus
-            leftIcon={
-              <Text style={styles.prefix}>+254</Text>
-            }
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.prefix}>+254</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="712 345 678"
+              placeholderTextColor="#666666"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              maxLength={12}
+              autoFocus
+            />
+          </View>
 
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            disabled={loading}
-            onPress={handleContinue}>
-            {loading ? 'Sending...' : 'Continue'}
-          </Button>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleContinue}
+            disabled={loading}>
+            <LinearGradient
+              colors={loading ? ['#666666', '#666666'] : ['#FF3B30', '#FF6B6B']}
+              style={styles.buttonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}>
+              <Text style={styles.buttonText}>
+                {loading ? 'Sending...' : 'Continue'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
-        {/* Terms */}
         <Text style={styles.terms}>
           By continuing, you agree to our Terms of Service and Privacy Policy
         </Text>
@@ -99,50 +98,95 @@ export default function PhoneAuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.ui.background.primary,
+    backgroundColor: '#0A0A0A',
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing[8],
+    paddingHorizontal: 32,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing[12],
+    marginBottom: 48,
   },
   iconCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.semantic.errorBg,
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing[6],
+    marginBottom: 24,
     borderWidth: 2,
-    borderColor: Colors.primary[400],
+    borderColor: '#FF3B30',
   },
   title: {
-    ...Typography.Heading.h2,
-    marginBottom: Spacing[3],
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    letterSpacing: -1,
   },
   subtitle: {
-    ...Typography.Body.base,
-    color: Colors.ui.text.tertiary,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666666',
     textAlign: 'center',
   },
   form: {
-    gap: Spacing[5],
+    gap: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderWidth: 2,
+    borderColor: '#2A2A2A',
+    gap: 12,
   },
   prefix: {
-    ...Typography.Label.large,
-    color: Colors.ui.text.primary,
+    fontSize: 18,
     fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  input: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    paddingVertical: 6,
+  },
+  button: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  buttonDisabled: {
+    shadowOpacity: 0,
+  },
+  buttonGradient: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   terms: {
-    ...Typography.Caption.medium,
-    color: Colors.ui.text.tertiary,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#666666',
     textAlign: 'center',
-    marginTop: Spacing[8],
+    marginTop: 32,
     lineHeight: 20,
   },
 });
